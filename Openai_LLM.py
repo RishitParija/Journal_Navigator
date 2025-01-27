@@ -39,6 +39,7 @@ import asyncio
 import ast
 import nltk
 import google.generativeai as genai
+import zipfile
 from openai import OpenAI
 
 
@@ -62,7 +63,7 @@ def get_or_create_event_loop():
 os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
 DB_FAISS_PATH = "bgi/db_faiss"
-DB_Path = "openai3/db_faiss"
+DB_Path = "openai3/openai3/db_faiss"
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 model = ChatOpenAI(model="gpt-4o")
@@ -71,6 +72,18 @@ key = os.getenv("GOOGLE_API_KEY")
 db = ""
 db1 = ""
 # Check if the vector store already exists
+ZIP_File = "openai3.zip"
+
+# Check if the "openai3" folder exists; if not, unzip it
+if not os.path.exists("openai3"):
+    if os.path.exists(ZIP_File):
+        print(f"Unzipping {ZIP_File}...")
+        with zipfile.ZipFile(ZIP_File, 'r') as zip_ref:
+            zip_ref.extractall("openai3")
+        print("Unzipped successfully.")
+    else:
+        print(f"Error: {ZIP_File} not found.")
+        exit(1)
 if os.path.exists(DB_Path):
     print("Loading existing Openai vector store.")
     embed = OpenAIEmbeddings(model="text-embedding-3-large")
