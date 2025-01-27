@@ -69,7 +69,23 @@ model = ChatOpenAI(model="gpt-4o")
 llm = ChatGroq(model="llama3-8b-8192", temperature=0)
 key = os.getenv("GOOGLE_API_KEY")
 db = ""
+db1 = ""
 # Check if the vector store already exists
+if os.path.exists(DB_Path):
+    print("Loading existing Openai vector store.")
+    embed = OpenAIEmbeddings(model="text-embedding-3-large")
+    db1 = FAISS.load_local(DB_Path, embed, allow_dangerous_deserialization=True)
+else:
+    print("Creating new Openai vector store.")
+    # Load data from the CSV file as before
+    loader = CSVLoader(file_path="Final_Research_Dataset_2.csv", encoding="utf-8", csv_args={'delimiter': ','})
+    data = loader.load()
+    print("Creating new embeddings.")
+    # Create embeddings and vector database
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+    db1 = FAISS.from_documents(data, embeddings)
+    print("Saving..")
+    db1.save_local(DB_FAISS_PATH)
 if os.path.exists(DB_FAISS_PATH):
     print("Loading existing FAISS vector store.")
     # Load the embeddings as before
@@ -115,7 +131,8 @@ def extract_token_llama3(text):
 
 
 def openai_llm(keywords, jif, publisher):
-    retriever = db.as_retriever()
+    
+    retriever = db1.as_retriever()
 
     # Set up system prompt
     system_prompt = (
@@ -140,7 +157,7 @@ def openai_llm(keywords, jif, publisher):
 
     # Invoke the RAG chain
     answer = rag_chain.invoke(
-        {"input": f"Keywords: {keywords}, Minimum JIF: {jif},Publisher list: {publisher}"}
+        {"input": f"Find Journals wit Keywords: {keywords}, Minimum JIF: {jif},Publisher list: {publisher}"}
     )
 
     # Inspect the result structure
